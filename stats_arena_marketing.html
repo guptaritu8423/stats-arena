@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stats Arena · TAPMI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#080f0c;color:#e0ebe5;min-height:100vh;overflow-x:hidden;}
+.page{max-width:820px;margin:0 auto;padding:1.5rem 1.25rem;}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;gap:12px;padding:1rem 0 1.5rem;}
+.logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#059669,#047857);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.hdr-text h1{font-size:20px;font-weight:700;color:#fff;}
+.hdr-text p{font-size:12px;color:#888;}
+
+/* SCREENS */
+.sc{display:none;}.sc.on{display:block;}
+
+/* SETUP */
+.hero{text-align:center;padding:2rem 0 1.5rem;}
+.hero h2{font-size:32px;font-weight:700;color:#fff;margin-bottom:8px;}
+.hero p{font-size:14px;color:#999;line-height:1.6;max-width:520px;margin:0 auto;}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1.5rem 0;}
+.mode-card{background:#0f1e18;border:1.5px solid #1a3328;border-radius:14px;padding:1.25rem;cursor:pointer;transition:all .15s;text-align:left;}
+.mode-card:hover{border-color:#059669;background:#122a20;}
+.mode-card.sel{border-color:#059669;background:#122a20;box-shadow:0 0 0 3px rgba(5,150,105,.18);}
+.mode-icon{font-size:28px;margin-bottom:8px;}
+.mode-card h3{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;}
+.mode-card p{font-size:12px;color:#888;line-height:1.5;}
+.mode-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;display:inline-block;margin-top:6px;}
+.badge-blue{background:rgba(5,150,105,.2);color:#34d399;}
+.badge-green{background:rgba(16,185,129,.18);color:#34d399;}
+.badge-amber{background:rgba(245,158,11,.18);color:#fbbf24;}
+.badge-purple{background:rgba(139,92,246,.18);color:#c4b5fd;}
+.start-btn{width:100%;padding:15px;border-radius:12px;border:none;background:linear-gradient(135deg,#059669,#047857);color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:.5rem;letter-spacing:.02em;}
+.start-btn:hover{opacity:.9;}
+
+/* GAME BAR */
+.gbar{display:flex;align-items:center;gap:10px;padding:10px 0 14px;border-bottom:1px solid #122a20;margin-bottom:1.25rem;}
+.gbar-left{flex:1;}
+.gpill{font-size:12px;padding:4px 14px;border-radius:20px;background:rgba(5,150,105,.2);color:#34d399;font-weight:600;display:inline-block;margin-bottom:4px;}
+.gbar-title{font-size:11px;color:#666;}
+.score-chips{display:flex;gap:8px;align-items:center;}
+.chip{background:#0f1e18;border:1px solid #1a3328;border-radius:8px;padding:5px 12px;text-align:center;}
+.chip-lbl{font-size:10px;color:#666;margin-bottom:1px;}
+.chip-v{font-size:17px;font-weight:700;color:#fff;}
+.chip-v.g{color:#34d399;}
+.chip-v.r{color:#ef4444;}
+.timer-ring{width:52px;height:52px;position:relative;flex-shrink:0;}
+.timer-ring svg{transform:rotate(-90deg);}
+.timer-ring circle{fill:none;stroke-width:4;}
+.tc-bg{stroke:#122a20;}
+.tc-fg{stroke:#059669;stroke-dasharray:138.23;stroke-dashoffset:0;transition:stroke-dashoffset .9s linear;}
+.tc-fg.warn{stroke:#f59e0b;}
+.tc-fg.danger{stroke:#ef4444;}
+.timer-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:700;color:#fff;}
+
+/* QUESTION CARD */
+.qcard{background:#0f1e18;border:1px solid #1a3328;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1rem;}
+.qlabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:.65rem;}
+.qtopic{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(5,150,105,.18);color:#34d399;font-weight:600;display:inline-block;margin-bottom:.75rem;}
+.qtext{font-size:16px;font-weight:500;color:#fff;line-height:1.6;margin-bottom:1rem;}
+.qdata{background:#090f0d;border-radius:10px;padding:.85rem 1rem;font-size:13px;color:#aaa;line-height:1.8;margin-bottom:1rem;border:1px solid #122a20;font-family:'Courier New',monospace;}
+.hint-box{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:.65rem 1rem;font-size:12px;color:#fbbf24;margin-bottom:.85rem;display:none;}
+.hint-box.show{display:block;}
+
+/* OPTIONS */
+.opt-grid{display:grid;gap:8px;grid-template-columns:1fr;}
+.opt{display:flex;align-items:flex-start;gap:0;background:#090f0d;border:1.5px solid #1a3328;border-radius:10px;padding:.85rem 1rem;cursor:pointer;transition:all .12s;font-size:14px;color:#ccc;text-align:left;line-height:1.5;white-space:normal;word-break:break-word;width:100%;}
+.opt:hover:not(.done){background:#122a20;border-color:#059669;color:#fff;}
+.opt.correct{background:rgba(16,185,129,.12);border-color:#10b981;color:#34d399;}
+.opt.wrong{background:rgba(239,68,68,.1);border-color:#ef4444;color:#f87171;}
+.opt.dim{opacity:.35;pointer-events:none;}
+.opt.done{cursor:default;}
+.opt-key{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:6px;background:#122a20;font-size:11px;font-weight:700;margin-right:10px;flex-shrink:0;margin-top:1px;}
+
+/* CALC INPUTS */
+.calc-group{display:grid;gap:8px;margin-bottom:.85rem;}
+.calc-row{display:flex;align-items:center;gap:10px;}
+.calc-lbl{font-size:13px;color:#aaa;min-width:160px;}
+.calc-inp{background:#090f0d;border:1.5px solid #1a3328;border-radius:8px;padding:8px 12px;font-size:15px;color:#fff;width:120px;outline:none;text-align:center;}
+.calc-inp:focus{border-color:#059669;}
+.calc-inp.ok{border-color:#10b981;background:rgba(16,185,129,.08);}
+.calc-inp.err{border-color:#ef4444;background:rgba(239,68,68,.08);}
+.sub-btn{padding:10px 24px;border-radius:8px;border:none;background:#059669;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.sub-btn:hover{opacity:.88;}
+
+/* FEEDBACK */
+.fb{border-radius:10px;padding:.85rem 1.1rem;font-size:13px;line-height:1.6;margin-bottom:.85rem;display:none;}
+.fb.show{display:block;}
+.fb.ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#34d399;}
+.fb.no{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#f87171;}
+.fb.info{background:rgba(5,150,105,.1);border:1px solid rgba(5,150,105,.3);color:#6ee7b7;}
+.fb-title{font-weight:700;margin-bottom:4px;}
+.next-btn{width:100%;padding:12px;border-radius:10px;border:none;background:#059669;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:.5rem;}
+.next-btn:hover{opacity:.9;}
+.next-btn:disabled{opacity:.4;cursor:default;}
+
+/* STAT CARDS strip */
+.stat-strip{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;}
+.sc2{background:#090f0d;border:1px solid #122a20;border-radius:8px;padding:7px 12px;min-width:90px;text-align:center;}
+.sc2-l{font-size:10px;color:#666;margin-bottom:2px;}
+.sc2-v{font-size:16px;font-weight:700;color:#fff;}
+
+/* RESULTS */
+.result-hd{text-align:center;padding:1.5rem 0 1.25rem;}
+.result-hd h2{font-size:28px;font-weight:700;color:#fff;margin-bottom:6px;}
+.result-hd p{font-size:14px;color:#888;}
+.grade-ring{width:110px;height:110px;margin:0 auto 1.25rem;position:relative;}
+.grade-ring svg{transform:rotate(-90deg);}
+.grade-ring circle{fill:none;stroke-width:8;}
+.gr-bg{stroke:#122a20;}
+.gr-fg{stroke-dasharray:283;stroke-dashoffset:283;transition:stroke-dashoffset 1.2s ease;}
+.grade-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.grade-num span{font-size:26px;font-weight:700;color:#fff;display:block;}
+.grade-num small{font-size:11px;color:#888;}
+.lb-table{width:100%;border-collapse:collapse;margin-bottom:1.5rem;}
+.lb-table th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#666;padding:8px;border-bottom:1px solid #122a20;text-align:left;}
+.lb-table td{padding:10px 8px;border-bottom:1px solid #080e0b;font-size:14px;}
+.lb-table tr:last-child td{border-bottom:none;}
+.rank1{color:#fbbf24;font-weight:700;}
+.rank2{color:#9ca3af;}
+.replay-btn{width:100%;padding:12px;border-radius:10px;border:1px solid #1a3328;background:#0f1e18;color:#ccc;font-size:14px;font-weight:500;cursor:pointer;margin-top:.5rem;}
+.replay-btn:hover{background:#122a20;}
+.perf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:1.5rem;}
+.perf-card{background:#0f1e18;border:1px solid #1a3328;border-radius:10px;padding:.85rem;text-align:center;}
+.perf-card.good{border-color:rgba(16,185,129,.4);}
+.perf-card.bad{border-color:rgba(239,68,68,.3);}
+.perf-t{font-size:11px;color:#888;margin-bottom:4px;}
+.perf-v{font-size:20px;font-weight:700;}
+.perf-v.g{color:#34d399;}.perf-v.r{color:#ef4444;}
+
+/* PROGRESS BAR */
+.prog-bar{height:4px;background:#122a20;border-radius:2px;margin-bottom:1.25rem;}
+.prog-fill{height:100%;background:linear-gradient(90deg,#059669,#34d399);border-radius:2px;transition:width .4s;}
+
+/* TEAM SELECTOR */
+.team-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.85rem;}
+.tt{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid #1a3328;background:transparent;color:#888;cursor:pointer;}
+.tt.on{background:rgba(5,150,105,.2);color:#34d399;border-color:#059669;}
+.team-score-strip{display:flex;gap:7px;flex-wrap:wrap;background:#090f0d;border-radius:10px;padding:8px;margin-bottom:1rem;}
+.ts{flex:1;min-width:80px;background:#0f1e18;border:1px solid #1a3328;border-radius:8px;padding:5px 8px;text-align:center;}
+.ts-n{font-size:11px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ts-v{font-size:16px;font-weight:700;color:#fff;}
+.ts-v.lead{color:#34d399;}
+.team-ans-row{padding:10px 0;border-bottom:1px solid #080e0b;}
+.team-ans-row:last-child{border-bottom:none;}
+.team-ans-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.tn{font-size:13px;font-weight:700;color:#fff;}
+.lock-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(16,185,129,.15);color:#34d399;white-space:nowrap;font-weight:600;}
+.t-dbs{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.tdb{padding:8px 10px;border-radius:8px;border:1px solid #1a3328;background:#090f0d;color:#ccc;cursor:pointer;font-size:12px;font-weight:500;text-align:left;transition:all .12s;line-height:1.4;white-space:normal;word-break:break-word;width:100%;}
+.tdb:hover:not(.tdim){background:#122a20;border-color:#059669;color:#fff;}
+.tdb.tsel{background:rgba(5,150,105,.2);color:#34d399;border-color:#059669;font-weight:600;}
+.tdb.tdim{opacity:.25;pointer-events:none;}
+.end-round-btn{width:100%;padding:11px;border-radius:10px;border:none;background:#059669;color:#fff;cursor:pointer;font-size:14px;font-weight:600;margin-top:.85rem;}
+
+/* ROUND RESULT CARDS */
+.rcard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:7px;margin-bottom:.85rem;}
+.rcard{background:#0f1e18;border:1px solid #1a3328;border-radius:10px;padding:.75rem;text-align:center;}
+.rcard.ok{border-color:#10b981;}
+.rc-nm{font-size:11px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rc-ans{font-size:11px;font-weight:600;margin:3px 0;color:#ccc;}
+.rc-pt{font-size:20px;font-weight:700;}.rc-pt.g{color:#34d399;}
+.rc-tot{font-size:10px;color:#666;}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="hdr">
+  <div class="logo">📊</div>
+  <div class="hdr-text">
+    <h1>Stats Arena</h1>
+    <p>Managerial Statistics · MBA Marketing · TAPMI · Sessions 2 &amp; 3</p>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="sc on" id="scSetup">
+  <div class="hero">
+    <h2>Choose your game mode</h2>
+    <p>All questions use real Indian banking &amp; business datasets. Two modes: solo challenge or live team competition.</p>
+  </div>
+  <div class="mode-grid">
+    <div class="mode-card" id="mc-solo" onclick="selMode('solo')">
+      <div class="mode-icon">🎯</div>
+      <h3>Solo Challenge</h3>
+      <p>Work through 12 questions across scales, data types, and descriptive statistics. Timed per question.</p>
+      <span class="mode-badge badge-blue">Individual · 12 Qs</span>
+    </div>
+    <div class="mode-card sel" id="mc-team" onclick="selMode('team')">
+      <div class="mode-icon">🏆</div>
+      <h3>Team Battle</h3>
+      <p>Project on screen. Teams compete to identify data characteristics and compute stats from real datasets.</p>
+      <span class="mode-badge badge-green">3–6 Teams · 10 Rounds</span>
+    </div>
+  </div>
+
+  <div id="solo-opts" style="display:none;">
+    <div style="background:#0f1e18;border:1px solid #1a3328;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;font-size:13px;color:#999;line-height:1.6;">
+      You will get <b style="color:#fff;">30 seconds</b> per question. Correct answers earn points; bonus for speed. Topics: Scales of Measurement, Data Types &amp; Sources, Descriptive Statistics (mean, median, mode, quartiles, SD, CV).
+    </div>
+  </div>
+
+  <div id="team-opts">
+    <div class="sec" style="margin-bottom:1rem;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#666;margin-bottom:8px;">Number of teams</div>
+      <div class="team-tabs" id="nTeamPills">
+        <button class="tt" data-n="2">2 teams</button>
+        <button class="tt on" data-n="3">3 teams</button>
+        <button class="tt" data-n="4">4 teams</button>
+        <button class="tt" data-n="5">5 teams</button>
+        <button class="tt" data-n="6">6 teams</button>
+      </div>
+    </div>
+    <div class="sec" style="margin-bottom:1rem;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#666;margin-bottom:8px;">Team names</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;" id="teamNameGrid"></div>
+    </div>
+    <div class="sec" style="margin-bottom:1rem;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#666;margin-bottom:8px;">Timer per round</div>
+      <div class="team-tabs" id="timerPills">
+        <button class="tt" data-t="30">30 sec</button>
+        <button class="tt on" data-t="60">60 sec</button>
+        <button class="tt" data-t="90">90 sec</button>
+      </div>
+    </div>
+    <div style="background:#090f0d;border:1px solid #122a20;border-radius:10px;padding:.65rem 1rem;font-size:12px;color:#888;line-height:1.6;margin-bottom:1rem;">
+      📺 Display on projector. Teams discuss and click their answer — or instructor clicks on behalf of teams. Clues cost −20 pts each. Each round uses <b style="color:#ccc;">real BKFS-relevant data</b>.
+    </div>
+  </div>
+
+  <button class="start-btn" id="startBtn">Start Game ▶</button>
+</div>
+
+<!-- SOLO GAME -->
+<div class="sc" id="scSolo">
+  <div class="gbar">
+    <div class="gbar-left">
+      <div class="gpill" id="soloRPill">Q 1 of 12</div>
+      <div class="gbar-title">Stats Arena · Solo Mode</div>
+    </div>
+    <div class="score-chips">
+      <div class="chip"><div class="chip-lbl">Score</div><div class="chip-v" id="soloScore">0</div></div>
+      <div class="chip"><div class="chip-lbl">Streak</div><div class="chip-v g" id="soloStreak">0</div></div>
+    </div>
+    <div class="timer-ring">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle class="tc-bg" cx="26" cy="26" r="22"/>
+        <circle class="tc-fg" id="soloTimerRing" cx="26" cy="26" r="22"/>
+      </svg>
+      <div class="timer-num" id="soloTimerNum">30</div>
+    </div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="soloProgFill" style="width:0%"></div></div>
+
+  <div class="qcard" id="soloQCard">
+    <div class="qtopic" id="soloTopic"></div>
+    <div class="qlabel">Read carefully and select the best answer</div>
+    <div class="qtext" id="soloQText"></div>
+    <div class="qdata" id="soloQData" style="display:none;"></div>
+  </div>
+
+  <div class="hint-box" id="soloHint"></div>
+  <div class="opt-grid" id="soloOpts"></div>
+  <div class="fb" id="soloFb"></div>
+  <button class="next-btn" id="soloNextBtn" disabled onclick="soloNext()">Next Question →</button>
+</div>
+
+<!-- TEAM GAME -->
+<div class="sc" id="scTeam">
+  <div class="gbar">
+    <div class="gbar-left">
+      <div class="gpill" id="teamRPill">Round 1 of 10</div>
+      <div class="gbar-title">Stats Arena · Team Battle</div>
+    </div>
+    <div class="timer-ring">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle class="tc-bg" cx="26" cy="26" r="22"/>
+        <circle class="tc-fg" id="teamTimerRing" cx="26" cy="26" r="22"/>
+      </svg>
+      <div class="timer-num" id="teamTimerNum">60</div>
+    </div>
+  </div>
+  <div class="team-score-strip" id="teamScoreStrip"></div>
+  <div class="prog-bar"><div class="prog-fill" id="teamProgFill" style="width:0%"></div></div>
+
+  <div class="qcard">
+    <div class="qtopic" id="teamTopic"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem;">
+      <div class="qlabel">Discuss and lock in your team's answer</div>
+      <div style="font-size:12px;color:#888;">Max pts: <b id="teamMaxPts" style="color:#fff;">100</b></div>
+    </div>
+    <div class="qtext" id="teamQText"></div>
+    <div class="qdata" id="teamQData" style="display:none;"></div>
+  </div>
+
+  <div style="display:flex;gap:7px;margin-bottom:7px;" id="teamClueRow"></div>
+  <div id="teamClueShown"></div>
+  <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#666;margin-bottom:8px;">Lock in your answer</div>
+  <div id="teamAnsRows"></div>
+  <button class="end-round-btn" id="teamEndBtn" onclick="teamEndRound()">🏁 End Round &amp; Reveal Answer</button>
+</div>
+
+<!-- TEAM ROUND RESULT -->
+<div class="sc" id="scTeamResult">
+  <div style="text-align:center;padding:1.25rem 0;">
+    <div style="font-size:12px;color:#888;margin-bottom:5px;">Correct answer</div>
+    <div style="font-size:28px;font-weight:700;color:#34d399;" id="trAns"></div>
+  </div>
+  <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#666;margin-bottom:8px;">Why?</div>
+  <div class="fb info show" id="trExpl"></div>
+  <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#666;margin-bottom:8px;">Round scores</div>
+  <div class="rcard-grid" id="trCards"></div>
+  <button class="next-btn" id="trNextBtn">Next Round →</button>
+</div>
+
+<!-- FINAL -->
+<div class="sc" id="scFinal">
+  <div class="result-hd">
+    <div class="grade-ring">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <circle class="gr-bg" cx="55" cy="55" r="45"/>
+        <circle class="gr-fg" id="grFg" cx="55" cy="55" r="45"/>
+      </svg>
+      <div class="grade-num"><span id="grPct">0%</span><small id="grLabel">Score</small></div>
+    </div>
+    <h2 id="finalTitle">Well done!</h2>
+    <p id="finalSub" style="color:#888;font-size:14px;"></p>
+  </div>
+  <div class="perf-grid" id="finalPerf"></div>
+  <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#666;margin-bottom:8px;" id="finalLbLabel">Performance breakdown</div>
+  <table class="lb-table" id="finalLb">
+    <thead><tr id="finalLbHead"></tr></thead>
+    <tbody id="finalLbBody"></tbody>
+  </table>
+  <button class="replay-btn" onclick="resetGame()">🔄 Play Again</button>
+</div>
+
+</div><!-- /page -->
+
+<script>
+/* ──────────────── QUESTION BANK ──────────────── */
+const SOLO_QS = [
+  // ── SCALES ──
+  {topic:"Scales of Data", type:"mcq",
+   q:"Unilever classifies its products as: 'Home Care', 'Beauty & Personal Care', 'Foods & Refreshments'. This is an example of which scale of measurement?",
+   opts:["Nominal","Ordinal","Interval","Ratio"],ans:0,
+   hint:"Are these categories ranked in a meaningful order, or are they just labels?",
+   expl:"Nominal — the product categories are just labels/names with no meaningful order or ranking between them. A brand manager can only count frequencies (e.g., which category has the most SKUs). Mode is the only valid measure of central tendency."},
+  {topic:"Scales of Data", type:"mcq",
+   q:"Amazon uses a 5-star rating system for product reviews. A customer rates a shampoo 4★ and a conditioner 2★. Can you say the shampoo is exactly twice as good?",
+   opts:["Yes — star ratings are Ratio scale","No — star ratings are Ordinal; ratios are not meaningful","Yes — the gap between stars is equal, making it Interval","No — star ratings are Nominal; only frequency counts"],ans:1,
+   hint:"Is the gap between 1★ and 2★ identical to the gap between 4★ and 5★? Does 0★ mean 'no quality at all'?",
+   expl:"Ordinal — star ratings have a meaningful order (4★ > 2★) but the intervals between stars are not necessarily equal and there is no true zero. You can rank products but cannot say one is 'twice as good'. For analysis, treat star ratings as ordinal, not ratio."},
+  {topic:"Scales of Data", type:"mcq",
+   q:"A brand's Net Promoter Score (NPS) is +42. NPS ranges from −100 to +100. Which scale is this?",
+   opts:["Nominal","Ordinal","Interval","Ratio"],ans:2,
+   hint:"Can NPS be negative? What does NPS = 0 actually mean — zero loyalty, or a neutral score?",
+   expl:"Interval — NPS can be negative and 0 does not mean 'zero brand loyalty'. It means equal proportions of promoters and detractors. Differences are meaningful (+42 vs +20 = 22-point gap) but ratios are not (+42 is not 'twice as loyal' as +21). Same logic as Celsius temperature."},
+  {topic:"Scales of Data", type:"mcq",
+   q:"A digital marketing agency records monthly ad spend per client in ₹. Client A spends ₹2,00,000 and Client B spends ₹1,00,000. On which scale is ad spend measured?",
+   opts:["Nominal","Ordinal","Interval","Ratio"],ans:3,
+   hint:"Does ₹0 mean no spend at all? Can you meaningfully say Client A spends 'twice as much'?",
+   expl:"Ratio — ad spend has a true zero (₹0 = no spending), equal intervals, and meaningful ratios (₹2L is exactly twice ₹1L). Most marketing expenditure and revenue variables are ratio scale. This allows all arithmetic operations."},
+  // ── DATA TYPES ──
+  {topic:"Data Types", type:"mcq",
+   q:"Which of the following is QUANTITATIVE DISCRETE data in a marketing context?",
+   opts:["Monthly revenue from an e-commerce store in ₹","Number of customer complaints received per week","Brand perception index score (0–100)","Time spent on a brand's website per session (minutes)"],ans:1,
+   hint:"Discrete data counts whole-number items — 'how many'. Continuous data measures 'how much' and can take any value.",
+   expl:"Number of complaints per week is discrete — it counts whole events (you cannot have 3.7 complaints). Revenue and time spent are continuous (can take any decimal value). Brand perception index is typically treated as continuous or ordinal depending on its construction."},
+  {topic:"Data Types", type:"mcq",
+   q:"BARC India records monthly Instagram follower counts for @AmulIndia from Jan 2022 to Jun 2026. This dataset is best described as:",
+   opts:["Cross-sectional data","Time series data","Experimental data","Categorical data"],ans:1,
+   hint:"Is the same variable (follower count) being recorded at multiple points in time?",
+   expl:"Time series — the same variable (Instagram followers) is tracked for a single entity (AmulIndia) across multiple time periods. Use case: identifying growth trends, seasonal peaks (e.g., festival months), and forecasting future follower count."},
+  {topic:"Data Types", type:"mcq",
+   q:"Nielsen measures brand awareness scores for 30 FMCG brands across India as of June 2026. This is:",
+   opts:["Time series data","Experimental data","Cross-sectional data","Panel data"],ans:2,
+   hint:"Multiple entities measured at the same point in time = ?",
+   expl:"Cross-sectional — data collected from multiple entities (30 FMCG brands) at approximately the same point in time (June 2026). Use case: comparing brand performance across competitors at one snapshot in time. No time dimension involved."},
+  // ── DESCRIPTIVE STATS ──
+  {topic:"Measures of Location", type:"mcq",
+   q:"A clothing brand surveys 500 customers on preferred T-shirt size: S(45), M(210), L(180), XL(55), XXL(10). Which measure tells the brand which size to stock the most?",
+   opts:["Mean — average of all size codes","Median — middle value when sorted","Mode = Medium (M)","Range = XXL − S"],ans:2,
+   hint:"The brand needs to know which size is most popular, not the average size code.",
+   expl:"Mode = M (210 responses, highest frequency). For inventory and production planning with categorical/ordinal data, mode is the right measure. It directly answers 'which option occurs most often'. Mean is meaningless for size categories and median is less actionable than mode here."},
+  {topic:"Measures of Location", type:"mcq",
+   q:"Monthly sales of 6 field sales executives (₹ lakhs): 8, 12, 10, 9, 11, 95. What is the best measure of 'typical' performance for appraisal purposes?",
+   opts:["Mean = ₹24.2L — average of all reps","Median = ₹10.5L — middle value","Mode = none exists","Range = ₹87L — spread of performance"],ans:1,
+   hint:"One rep (₹95L) is a star outlier. Which measure is resistant to this extreme value?",
+   expl:"Median = ₹10.5L (sorted: 8,9,10,11,12,95 → middle = (10+11)/2). The mean (₹24.2L) is inflated by the star performer and misrepresents what a 'typical' rep earns. In salary and income analysis, median is always preferred when outliers exist — same reason income surveys report median household income."},
+  {topic:"Measures of Variability", type:"mcq",
+   q:"Two email marketing campaigns both achieved a mean Click-Through Rate (CTR) of 3.5%. Campaign A: SD = 0.3%. Campaign B: SD = 1.9%. What should the marketing manager conclude?",
+   opts:["Campaign A is more effective since lower SD means more clicks","Campaign B is more effective since higher SD means wider reach","Campaign A is more consistent — its CTR is reliably close to 3.5% each time","Campaign B is more consistent — higher variability shows engagement"],ans:2,
+   hint:"Standard deviation measures spread. Low SD = results are close to the mean every time = consistent/predictable.",
+   expl:"Campaign A is more consistent (SD = 0.3%). Its CTR hovers reliably around 3.5% across audiences. Campaign B's higher SD (1.9%) means CTR swings widely — sometimes 5.4%, sometimes 1.6%. For budget planning and forecasting, a lower SD campaign is more reliable and easier to scale."},
+  {topic:"Measures of Variability", type:"mcq",
+   q:"Compare relative variability: Luxury Perfume (mean price ₹8,000, SD ₹1,200) vs Shampoo (mean price ₹150, SD ₹40). Which product has higher relative price variability?",
+   opts:["Luxury Perfume — CV = 15%","Shampoo — CV = 26.7%","Both the same — compare absolute SD","Cannot compare — different product categories"],ans:1,
+   hint:"CV = (SD/Mean) × 100. Calculate for both. Absolute SD cannot be compared across different price ranges.",
+   expl:"Perfume: CV = (1200/8000)×100 = 15%. Shampoo: CV = (40/150)×100 = 26.7%. Despite having a much lower absolute SD, shampoo has higher relative price variability. CV is the right tool when comparing variability across variables with very different means or units — essential for pricing and brand architecture decisions."},
+  {topic:"Statistical Studies", type:"mcq",
+   q:"Swiggy shows Restaurant A's redesigned menu to 10,000 randomly selected users and Restaurant B's original menu to another 10,000 users, then compares order conversion rates. This is:",
+   opts:["Observational study — tracking natural user behaviour","Experimental study (A/B test) — controlled assignment of treatments","Cross-sectional survey — snapshot of user preferences","Descriptive statistics — summarising order data"],ans:1,
+   hint:"Is Swiggy controlling and assigning which users see which menu version?",
+   expl:"Experimental (A/B test) — a variable (menu design) is identified, controlled (randomly assigned to two groups), and the outcome (conversion rate) is measured. This allows causal inference: 'did the new menu cause higher conversions?' Use case: product testing, pricing strategy, campaign creative testing, UX design."}
+];
+
+const TEAM_QS = [
+  {topic:"Scales of Data",
+   q:"A brand manager at HUL is building a consumer database. Classify each variable into the correct scale of measurement.",
+   data:`Variable                              | Scale of Measurement
+──────────────────────────────────────|──────────────────────
+Customer's city (Mumbai/Delhi/Pune)   | ?
+Product rating on Flipkart (1–5 ★)   | ?
+Monthly ad spend in ₹                 | ?
+Net Promoter Score (NPS) (−100 to +100) | ?
+Purchase category (Electronics/Fashion/Grocery) | ?`,
+   opts:["All five are Ratio scale","City=Nominal, Rating=Ordinal, Ad Spend=Ratio, NPS=Interval, Category=Nominal","City=Ordinal, Rating=Ratio, Ad Spend=Interval, NPS=Ratio, Category=Nominal","City=Nominal, Rating=Ratio, Ad Spend=Ratio, NPS=Ratio, Category=Ordinal"],
+   ans:1,
+   expl:"City = Nominal (just labels, no order). Product Rating = Ordinal (ordered but unequal gaps, no true zero). Ad Spend = Ratio (₹0 = no spend, true zero, ratios meaningful). NPS = Interval (can be negative, 0 ≠ no loyalty, differences meaningful, ratios not). Purchase Category = Nominal (labels only, no order)."},
+  {topic:"Data Types & Sources",
+   q:"A marketing analytics team at Nestlé India has four datasets. Classify each as Time Series or Cross-Sectional:",
+   data:`Dataset                                              | Type
+─────────────────────────────────────────────────────|──────
+Monthly Maggi sales (₹ crores) from Jan 2021–Jun 2026 | ?
+Brand recall scores of 20 FMCG brands in Jun 2026    | ?
+Daily Instagram engagement rate of @NestleIndia, 2025 | ?
+Market share of 15 biscuit brands as of Q2 FY2026    | ?`,
+   opts:["All four are time series","Maggi Sales=TS, Brand Recall=CS, Instagram=TS, Market Share=CS","Maggi Sales=CS, Brand Recall=TS, Instagram=CS, Market Share=TS","All four are cross-sectional"],
+   ans:1,
+   expl:"Time Series: Maggi sales (same variable tracked Jan 2021–Jun 2026) and Instagram engagement (same account tracked daily through 2025) — both have a time dimension. Cross-Sectional: Brand recall (20 brands at one point, June 2026) and Market share (15 brands at one point, Q2 FY2026) — multiple entities at the same moment. Use TS to find trends; CS to compare competitors."},
+  {topic:"Measures of Location",
+   q:"A sales manager reviews 10 field reps' monthly revenue (₹ lakhs): 14, 18, 16, 12, 90, 15, 17, 13, 16, 14. Which statistic best represents 'typical' performance and why?",
+   data:`Sorted: 12, 13, 14, 14, 15, 16, 16, 17, 18, 90  (n = 10)
+Mean   = (225/10) = ₹22.5L
+Median = (15 + 16)/2 = ₹15.5L
+Mode   = ₹14L and ₹16L (bimodal)
+Range  = 90 − 12 = ₹78L`,
+   opts:["Mean = ₹22.5L — uses all data points","Median = ₹15.5L — not affected by the outlier","Mode = ₹14L — most frequent value","Range = ₹78L — shows full performance spread"],
+   ans:1,
+   expl:"Median = ₹15.5L is the best measure here. The rep with ₹90L is a clear outlier — possibly a corporate account win — that inflates the mean to ₹22.5L, which is unrealistically high and misrepresents 9 of the 10 reps. Median splits the sorted data exactly in half and is resistant to outliers. Use mean only when data has no significant outliers."},
+  {topic:"Weighted Mean",
+   q:"A brand tracks customer satisfaction across 3 segments. Use the weighted mean to find the overall brand satisfaction score:",
+   data:`Segment       | Satisfaction Score | No. of Customers
+──────────────|────────────────────|──────────────────
+Premium       |        88          |     1,200
+Mid-range     |        74          |     5,400
+Budget        |        61          |     3,400
+──────────────|────────────────────|──────────────────
+Σwx = 88×1200 + 74×5400 + 61×3400
+    = 1,05,600 + 3,99,600 + 2,07,400 = 7,12,600
+Σw  = 1200 + 5400 + 3400 = 10,000
+Weighted Mean = 7,12,600 / 10,000 = ?`,
+   opts:["74.3 (simple mean of 88+74+61)","71.3 (simple mean of 88+74+61 rounded)","71.26 (weighted mean)","61.0 (budget segment score)"],
+   ans:2,
+   expl:"Weighted Mean = 7,12,600 / 10,000 = 71.26. Simple mean = (88+74+61)/3 = 74.3, which overweights the small Premium segment (only 1,200 customers). The weighted mean correctly reflects that 54% of customers are Mid-range and 34% are Budget — giving a realistic overall score. Brands with large low-satisfaction segments must not use simple averages to report CSAT."},
+  {topic:"Geometric Mean",
+   q:"A digital marketing agency's social media follower count grew each year. Compute the true average annual growth rate:",
+   data:`Year | Growth Rate | Growth Factor
+─────|─────────────|──────────────
+2022 |   +35%      |    1.35
+2023 |   −10%      |    0.90
+2024 |   +50%      |    1.50
+2025 |   +20%      |    1.20
+──────────────────────────────────
+Product = 1.35 × 0.90 × 1.50 × 1.20 = 2.187
+Geometric Mean = (2.187)^(1/4) = ?
+Arithmetic Mean of growth rates = (35−10+50+20)/4 = 23.75%`,
+   opts:["23.75% — Arithmetic Mean of growth rates","21.5% — Geometric Mean","25.0% — overestimates due to the negative year","18.7% — uses product only"],
+   ans:1,
+   expl:"Geometric Mean = (2.187)^0.25 − 1 ≈ 21.5%. The arithmetic mean (23.75%) overestimates because it ignores the compounding effect of the −10% year. A ₹1,00,000 follower base grows to ₹1,00,000 × 2.187 = ₹2,18,700 over 4 years — not the ₹2,47,000 the arithmetic mean implies. Always use Geometric Mean for compound growth rates in marketing metrics."},
+  {topic:"Median & Quartiles",
+   q:"A marketing manager segments 9 customers by monthly spend (₹): 1,200; 4,500; 800; 9,200; 2,800; 6,100; 3,500; 7,800; 1,600. Find Q1, Q2 (Median), Q3 to design loyalty tier thresholds.",
+   data:`Sorted: 800, 1200, 1600, 2800, 3500, 4500, 6100, 7800, 9200
+n = 9
+Q1 position = (25/100)(9+1) = 2.5 → avg of 2nd and 3rd values
+Q2 position = (50/100)(9+1) = 5.0 → 5th value
+Q3 position = (75/100)(9+1) = 7.5 → avg of 7th and 8th values`,
+   opts:["Q1=1200, Q2=3500, Q3=6100","Q1=1400, Q2=3500, Q3=6950","Q1=1600, Q2=3500, Q3=7800","Q1=800, Q2=2800, Q3=6100"],
+   ans:1,
+   expl:"Q1 = (1200+1600)/2 = 1400. Q2 = 3500 (5th value). Q3 = (6100+7800)/2 = 6950. IQR = 6950−1400 = 5550. The manager now sets tiers: Bronze (below ₹1,400), Silver (₹1,400–₹6,950), Gold (above ₹6,950). Quartiles are the standard tool for customer segmentation in RFM (Recency, Frequency, Monetary) analysis."},
+  {topic:"Measures of Variability",
+   q:"Two social media campaigns both achieved a mean daily reach of 50,000 users. Campaign A (Influencer): SD = 3,000. Campaign B (Paid Ads): SD = 18,000. What should the brand manager conclude?",
+   data:`Campaign A (Influencer posts):
+Typical daily reach: 47,000 – 53,000 users (mean ± 1 SD)
+
+Campaign B (Paid Ads):
+Typical daily reach: 32,000 – 68,000 users (mean ± 1 SD)
+
+Both campaigns: Mean reach = 50,000 users`,
+   opts:["Campaign B is better — more users on good days","Campaign A is more consistent — lower SD means predictable reach","Campaign B is more consistent — higher SD means wider audience","Both are equally effective since the mean is the same"],
+   ans:1,
+   expl:"Campaign A (SD=3,000) delivers reliably between 47K–53K users every day. Campaign B (SD=18,000) swings between 32K and 68K — unpredictable. For budget planning and performance forecasting, Campaign A is far more reliable. A brand manager who needs consistent reach (e.g., product launch week) would choose Campaign A. SD measures risk and consistency, not just average performance."},
+  {topic:"Coefficient of Variation",
+   q:"A marketing analyst wants to compare consistency of sales across two product categories. Which category has higher relative variability?",
+   data:`Category        | Mean Monthly Sales (₹) | Std Deviation (₹)
+────────────────|────────────────────────|──────────────────
+Luxury Watches  |    ₹8,00,000           |   ₹2,00,000
+FMCG (Biscuits) |    ₹60,000             |   ₹18,000
+────────────────|────────────────────────|──────────────────
+CV = (SD / Mean) × 100`,
+   opts:["Luxury Watches — CV = 25%","FMCG Biscuits — CV = 30%","Both the same — Watches has higher absolute SD","Cannot compare — different product types"],
+   ans:1,
+   expl:"Watches: CV = (2,00,000/8,00,000)×100 = 25%. Biscuits: CV = (18,000/60,000)×100 = 30%. Despite having a much lower absolute SD (₹18K vs ₹2L), FMCG Biscuits has higher relative variability. CV removes the scale effect, making cross-category comparison valid. A category manager uses CV to identify which product lines are harder to forecast and need safety stock."},
+  {topic:"Statistical Inference",
+   q:"Kantar conducts a brand health study interviewing 3,000 consumers across 6 Indian cities to estimate national brand awareness of Dove. Match each concept:",
+   data:`The 3,000 consumers interviewed = ?
+All consumers in India = ?
+Brand awareness % from the 3,000 = ?
+True national brand awareness % = ?
+Using 3,000 responses to estimate the national figure = ?`,
+   opts:["Population, Sample, Parameter, Statistic, Census","Sample, Population, Sample Statistic, Population Parameter, Statistical Inference","Sample, Population, Population Parameter, Sample Statistic, Observational Study","Census, Sample, Statistic, Parameter, Experimental Study"],
+   ans:1,
+   expl:"3,000 consumers = Sample (a subset chosen from the full population). All Indian consumers = Population (the full set of interest). Awareness % from 3,000 = Sample Statistic (a point estimator of the true value). True national awareness = Population Parameter (unknown — this is what we're trying to estimate). Using the sample to estimate the parameter = Statistical Inference. This is the foundation of every consumer survey in marketing."},
+  {topic:"Descriptive Statistics",
+   q:"A brand manager has weekly website visitors (thousands) for 10 weeks: 18, 22, 20, 19, 25, 21, 20, 23, 18, 24. Compute the full descriptive summary.",
+   data:`Sorted: 18, 18, 19, 20, 20, 21, 22, 23, 24, 25   n = 10
+Mean   = Σx/n = 210/10 = ?
+Median = average of 5th and 6th values = ?
+Mode   = ?
+Range  = 25 − 18 = ?
+Q1 position = (25/100)(11) = 2.75th → between 2nd and 3rd
+Q3 position = (75/100)(11) = 8.25th → between 8th and 9th`,
+   opts:["Mean=21, Median=20.5, Mode=18&20, Range=7","Mean=21, Median=21, Mode=20, Range=7","Mean=20, Median=20.5, Mode=18, Range=6","Mean=21, Median=20.5, Mode=18&20, Range=8"],
+   ans:0,
+   expl:"Mean = 210/10 = 21K. Median = (20+21)/2 = 20.5K (5th and 6th values). Mode = 18K and 20K (both appear twice — bimodal). Range = 25−18 = 7K. The brand manager sees that traffic is fairly consistent (mean ≈ median, low range). Bimodal mode suggests two 'typical' traffic levels — possibly weekday vs weekend patterns worth investigating."}
+];
+
+const DISTS = ["A","B","C","D"];
+
+/* ──────────────── STATE ──────────────── */
+let G = {
+  mode:'team', nTeams:3, totalTime:60,
+  teams:[], scores:[], corrects:[],
+  soloQ:0, soloScore:0, soloStreak:0, soloCorrects:0,
+  teamRound:0, teamTimer:null, teamTimeLeft:60,
+  teamAnswers:{}, teamMaxPts:100, teamHints:0, teamEnded:false,
+  chart:null, soloTimer:null, soloTimeLeft:30
+};
+
+/* ──────────────── SETUP ──────────────── */
+function selMode(m){
+  G.mode=m;
+  document.getElementById('mc-solo').classList.toggle('sel',m==='solo');
+  document.getElementById('mc-team').classList.toggle('sel',m==='team');
+  document.getElementById('solo-opts').style.display=m==='solo'?'block':'none';
+  document.getElementById('team-opts').style.display=m==='team'?'block':'none';
+}
+document.querySelectorAll('#nTeamPills .tt').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#nTeamPills .tt').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); G.nTeams=+b.dataset.n; renderNameGrid();
+  };
+});
+document.querySelectorAll('#timerPills .tt').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#timerPills .tt').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); G.totalTime=+b.dataset.t;
+  };
+});
+function renderNameGrid(){
+  const g=document.getElementById('teamNameGrid'); g.innerHTML='';
+  for(let i=0;i<G.nTeams;i++){
+    const inp=document.createElement('input');
+    inp.type='text'; inp.placeholder='Team '+(i+1);
+    inp.value=G.teams[i]?G.teams[i].name:'Team '+(i+1);
+    inp.dataset.i=i;
+    inp.style.cssText='background:#090f0d;border:1px solid #1a3328;border-radius:8px;padding:8px 12px;font-size:14px;color:#fff;outline:none;';
+    g.appendChild(inp);
+  }
+}
+renderNameGrid();
+document.getElementById('startBtn').onclick=startGame;
+selMode('team');
+
+function startGame(){
+  if(G.mode==='solo') startSolo();
+  else startTeam();
+}
+
+/* ──────────────── SOLO ──────────────── */
+function startSolo(){
+  G.soloQ=0; G.soloScore=0; G.soloStreak=0; G.soloCorrects=0;
+  show('scSolo'); renderSoloQ();
+}
+function renderSoloQ(){
+  const q=SOLO_QS[G.soloQ];
+  document.getElementById('soloRPill').textContent='Q '+(G.soloQ+1)+' of '+SOLO_QS.length;
+  document.getElementById('soloScore').textContent=G.soloScore;
+  document.getElementById('soloStreak').textContent=G.soloStreak;
+  document.getElementById('soloProgFill').style.width=((G.soloQ/SOLO_QS.length)*100)+'%';
+  document.getElementById('soloTopic').textContent=q.topic;
+  document.getElementById('soloQText').textContent=q.q;
+  const dEl=document.getElementById('soloQData');
+  if(q.data){dEl.style.display='block';dEl.textContent=q.data;}else{dEl.style.display='none';}
+  document.getElementById('soloHint').classList.remove('show');
+  document.getElementById('soloHint').innerHTML='<b>Hint:</b> '+q.hint;
+  document.getElementById('soloFb').className='fb';
+  document.getElementById('soloNextBtn').disabled=true;
+
+  const og=document.getElementById('soloOpts'); og.innerHTML='';
+  og.className='opt-grid';
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.dataset.i=i;
+    b.innerHTML='<span class="opt-key">'+'ABCD'[i]+'</span>'+o;
+    b.onclick=()=>soloAnswer(i);
+    og.appendChild(b);
+  });
+  startSoloTimer();
+}
+function startSoloTimer(){
+  if(G.soloTimer)clearInterval(G.soloTimer);
+  G.soloTimeLeft=30;
+  updateSoloRing();
+  G.soloTimer=setInterval(()=>{
+    G.soloTimeLeft--;
+    updateSoloRing();
+    if(G.soloTimeLeft<=0){clearInterval(G.soloTimer);soloAnswer(-1);}
+  },1000);
+}
+function updateSoloRing(){
+  const t=G.soloTimeLeft; const pct=t/30;
+  const circ=138.23; const offset=circ*(1-pct);
+  const ring=document.getElementById('soloTimerRing');
+  ring.style.strokeDashoffset=offset;
+  ring.className='tc-fg'+(t<=10?' danger':t<=20?' warn':'');
+  document.getElementById('soloTimerNum').textContent=t;
+}
+function soloAnswer(idx){
+  if(G.soloTimer)clearInterval(G.soloTimer);
+  const q=SOLO_QS[G.soloQ];
+  document.querySelectorAll('.opt').forEach((b,i)=>{
+    b.classList.add('done');
+    if(i===q.ans) b.classList.add('correct');
+    else if(i===idx&&i!==q.ans) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  const correct=idx===q.ans;
+  if(correct){
+    const pts=50+Math.round(G.soloTimeLeft/30*50);
+    G.soloScore+=pts; G.soloStreak++; G.soloCorrects++;
+    document.getElementById('soloScore').textContent=G.soloScore;
+    document.getElementById('soloStreak').textContent=G.soloStreak;
+    const fb=document.getElementById('soloFb');
+    fb.className='fb ok show';
+    fb.innerHTML='<div class="fb-title">✅ Correct! +'+pts+' points</div>'+q.expl;
+  } else if(idx===-1){
+    G.soloStreak=0;
+    const fb=document.getElementById('soloFb');
+    fb.className='fb no show';
+    fb.innerHTML='<div class="fb-title">⏱ Time\'s up!</div>The correct answer was: <b>'+'ABCD'[q.ans]+'. '+q.opts[q.ans]+'</b><br><br>'+q.expl;
+    document.getElementById('soloHint').classList.add('show');
+  } else {
+    G.soloStreak=0;
+    const fb=document.getElementById('soloFb');
+    fb.className='fb no show';
+    fb.innerHTML='<div class="fb-title">❌ Not quite.</div>The correct answer was: <b>'+'ABCD'[q.ans]+'. '+q.opts[q.ans]+'</b><br><br>'+q.expl;
+    document.getElementById('soloHint').classList.add('show');
+  }
+  const nb=document.getElementById('soloNextBtn');
+  nb.disabled=false;
+  nb.textContent=G.soloQ===SOLO_QS.length-1?'View Results →':'Next Question →';
+}
+function soloNext(){
+  G.soloQ++;
+  if(G.soloQ>=SOLO_QS.length) showSoloFinal();
+  else renderSoloQ();
+}
+function showSoloFinal(){
+  show('scFinal');
+  const pct=Math.round((G.soloCorrects/SOLO_QS.length)*100);
+  const ring=document.getElementById('grFg');
+  ring.style.stroke=pct>=70?'#10b981':pct>=50?'#f59e0b':'#ef4444';
+  setTimeout(()=>{ring.style.strokeDashoffset=283*(1-pct/100);},100);
+  document.getElementById('grPct').textContent=pct+'%';
+  document.getElementById('grLabel').textContent='Correct';
+  document.getElementById('finalTitle').textContent=pct>=80?'Excellent work! 🎉':pct>=60?'Good effort! 👍':'Keep practising! 📚';
+  document.getElementById('finalSub').textContent='You answered '+G.soloCorrects+' of '+SOLO_QS.length+' questions correctly and scored '+G.soloScore+' points.';
+  const topics={};
+  SOLO_QS.forEach((q,i)=>{if(!topics[q.topic])topics[q.topic]={c:0,t:0};topics[q.topic].t++;});
+  const pf=document.getElementById('finalPerf');
+  pf.innerHTML='<div class="perf-card"><div class="perf-t">Total Score</div><div class="perf-v g">'+G.soloScore+'</div></div>'+
+    '<div class="perf-card"><div class="perf-t">Correct</div><div class="perf-v '+(G.soloCorrects>=8?'g':'r')+'">'+G.soloCorrects+'/'+SOLO_QS.length+'</div></div>'+
+    '<div class="perf-card"><div class="perf-t">Best Streak</div><div class="perf-v g">'+Math.max(G.soloStreak,G.soloCorrects>0?1:0)+'</div></div>';
+  document.getElementById('finalLbLabel').textContent='Topic breakdown';
+  document.getElementById('finalLbHead').innerHTML='<th>Topic</th><th>Questions</th>';
+  document.getElementById('finalLbBody').innerHTML=SOLO_QS.map((q,i)=>{
+    const done=i<G.soloQ; return `<tr><td>${q.topic}</td><td style="color:#888;font-size:12px;">${q.q.slice(0,60)}…</td></tr>`;
+  }).join('');
+}
+
+/* ──────────────── TEAM ──────────────── */
+function startTeam(){
+  const ins=document.querySelectorAll('#teamNameGrid input');
+  G.teams=Array.from(ins).map((inp,i)=>({name:inp.value.trim()||'Team '+(i+1)}));
+  G.scores=G.teams.map(()=>0);
+  G.corrects=G.teams.map(()=>0);
+  G.teamRound=0;
+  startTeamRound();
+}
+function startTeamRound(){
+  const q=TEAM_QS[G.teamRound];
+  G.teamAnswers={}; G.teamMaxPts=100; G.teamHints=0; G.teamEnded=false;
+  G.teamTimeLeft=G.totalTime;
+  show('scTeam');
+  document.getElementById('teamRPill').textContent='Round '+(G.teamRound+1)+' of '+TEAM_QS.length;
+  document.getElementById('teamProgFill').style.width=((G.teamRound/TEAM_QS.length)*100)+'%';
+  document.getElementById('teamTopic').textContent=q.topic;
+  document.getElementById('teamQText').textContent=q.q;
+  const dEl=document.getElementById('teamQData');
+  if(q.data){dEl.style.display='block';dEl.textContent=q.data;}else{dEl.style.display='none';}
+  document.getElementById('teamMaxPts').textContent=100;
+  renderTeamScoreStrip();
+  renderTeamClues(q);
+  renderTeamAnsRows(q);
+  startTeamTimer();
+}
+function renderTeamScoreStrip(){
+  const max=Math.max(...G.scores,0);
+  document.getElementById('teamScoreStrip').innerHTML=G.teams.map((t,i)=>
+    `<div class="ts"><div class="ts-n">${t.name}</div><div class="ts-v${G.scores[i]===max&&G.scores[i]>0?' lead':''}">${G.scores[i]}</div></div>`
+  ).join('');
+}
+function renderTeamClues(q){
+  const row=document.getElementById('teamClueRow'); row.innerHTML='';
+  document.getElementById('teamClueShown').innerHTML='';
+  [0,1,2].forEach(i=>{
+    const b=document.createElement('button');
+    b.style.cssText='flex:1;padding:7px;border-radius:8px;border:1px solid rgba(245,158,11,.4);background:transparent;color:#fbbf24;cursor:pointer;font-size:11px;font-weight:600;transition:all .1s;';
+    b.dataset.i=i; b.id='clue'+i; b.disabled=i>0;
+    b.textContent='Clue '+(i+1)+' (−20 pts)';
+    b.onclick=()=>revealTeamClue(i,q);
+    row.appendChild(b);
+  });
+}
+function revealTeamClue(idx,q){
+  G.teamHints=idx+1; G.teamMaxPts=100-G.teamHints*20;
+  document.getElementById('teamMaxPts').textContent=G.teamMaxPts;
+  for(let i=0;i<3;i++){
+    const b=document.getElementById('clue'+i);
+    if(i<G.teamHints){b.disabled=true;b.style.opacity='.6';}
+    else if(i===G.teamHints){b.disabled=false;}
+  }
+  const clues=[
+    'Think about what the correct answer eliminates first.',
+    'Look at the data provided — what statistical property stands out?',
+    'Answer: '+q.opts[q.ans]
+  ];
+  const cs=document.getElementById('teamClueShown');
+  cs.innerHTML=clues.slice(0,G.teamHints).map((c,i)=>
+    `<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;padding:7px 10px;font-size:12px;color:#fbbf24;margin-bottom:5px;line-height:1.5;"><b>${i+1}.</b> ${c}</div>`
+  ).join('');
+}
+function renderTeamAnsRows(q){
+  const el=document.getElementById('teamAnsRows'); el.innerHTML='';
+  G.teams.forEach((t,ti)=>{
+    const row=document.createElement('div');
+    row.className='team-ans-row'; row.id='tar'+ti;
+
+    // Header: team name + lock tag placeholder
+    const hdr=document.createElement('div'); hdr.className='team-ans-header';
+    const nm=document.createElement('div'); nm.className='tn'; nm.textContent=t.name;
+    const ltWrap=document.createElement('div'); ltWrap.id='lock'+ti;
+    hdr.appendChild(nm); hdr.appendChild(ltWrap);
+    row.appendChild(hdr);
+
+    // Option buttons in 2×2 grid — full text, no slicing
+    const dbs=document.createElement('div'); dbs.className='t-dbs';
+    q.opts.forEach((o,oi)=>{
+      const b=document.createElement('button'); b.className='tdb';
+      b.dataset.ti=ti; b.dataset.oi=oi;
+      b.innerHTML='<b>'+'ABCD'[oi]+'.</b> '+o;
+      b.onclick=()=>teamLockAns(ti,oi);
+      dbs.appendChild(b);
+    });
+    row.appendChild(dbs);
+    el.appendChild(row);
+  });
+}
+function teamLockAns(ti,oi){
+  if(G.teamAnswers[ti]!==undefined)return;
+  G.teamAnswers[ti]=oi;
+  const row=document.getElementById('tar'+ti);
+  row.querySelectorAll('.tdb').forEach((b,i)=>{
+    if(i===oi)b.classList.add('tsel'); else b.classList.add('tdim');
+  });
+  const tag=document.createElement('div'); tag.className='lock-tag'; tag.textContent='✓ Locked';
+  document.getElementById('lock'+ti).appendChild(tag);
+}
+function startTeamTimer(){
+  if(G.teamTimer)clearInterval(G.teamTimer);
+  updateTeamRing();
+  G.teamTimer=setInterval(()=>{
+    G.teamTimeLeft--;
+    updateTeamRing();
+    if(G.teamTimeLeft<=0){clearInterval(G.teamTimer);teamEndRound();}
+  },1000);
+}
+function updateTeamRing(){
+  const t=G.teamTimeLeft; const pct=t/G.totalTime;
+  const circ=138.23; const offset=circ*(1-pct);
+  const ring=document.getElementById('teamTimerRing');
+  ring.style.strokeDashoffset=offset;
+  ring.className='tc-fg'+(t<=10?' danger':t<=G.totalTime*0.3?' warn':'');
+  document.getElementById('teamTimerNum').textContent=t;
+}
+function teamEndRound(){
+  if(G.teamEnded)return; G.teamEnded=true;
+  if(G.teamTimer)clearInterval(G.teamTimer);
+  showTeamRoundResult();
+}
+function showTeamRoundResult(){
+  const q=TEAM_QS[G.teamRound]; show('scTeamResult');
+  document.getElementById('trAns').textContent=q.opts[q.ans];
+  document.getElementById('trExpl').innerHTML='<div class="fb-title">Why this is correct:</div>'+q.expl;
+  const cards=G.teams.map((t,i)=>{
+    const ans=G.teamAnswers[i];
+    const ok=ans===q.ans;
+    const pts=ok?G.teamMaxPts:0;
+    G.scores[i]+=pts; if(ok)G.corrects[i]++;
+    return{name:t.name,ans:ans!==undefined?q.opts[ans]:'—',ok,pts,total:G.scores[i]};
+  });
+  document.getElementById('trCards').innerHTML=cards.map(c=>
+    `<div class="rcard ${c.ok?'ok':''}">
+      <div class="rc-nm">${c.name}</div>
+      <div class="rc-ans">${c.ans.slice(0,22)}</div>
+      <div class="rc-pt${c.pts>0?' g':''}">${c.pts>0?'+'+c.pts:'0'}</div>
+      <div class="rc-tot">Total: ${c.total}</div>
+    </div>`).join('');
+  const isLast=G.teamRound===TEAM_QS.length-1;
+  const nb=document.getElementById('trNextBtn');
+  nb.textContent=isLast?'View Final Scores 🏆':'Next Round →';
+  nb.onclick=isLast?showTeamFinal:()=>{G.teamRound++;startTeamRound();};
+}
+function showTeamFinal(){
+  show('scFinal');
+  const ranked=G.teams.map((t,i)=>({name:t.name,score:G.scores[i],correct:G.corrects[i]})).sort((a,b)=>b.score-a.score);
+  const pct=Math.round((ranked[0].score/(TEAM_QS.length*100))*100);
+  const ring=document.getElementById('grFg');
+  ring.style.stroke='#10b981';
+  setTimeout(()=>{ring.style.strokeDashoffset=283*(1-Math.min(pct,100)/100);},100);
+  document.getElementById('grPct').textContent=ranked[0].score;
+  document.getElementById('grLabel').textContent='pts (1st)';
+  document.getElementById('finalTitle').textContent=ranked[0].name+' wins! 🏆';
+  document.getElementById('finalSub').textContent=ranked[0].name+' leads with '+ranked[0].score+' points and '+ranked[0].correct+'/'+TEAM_QS.length+' rounds correct.';
+  const pf=document.getElementById('finalPerf');
+  pf.innerHTML=ranked.slice(0,3).map((r,i)=>
+    `<div class="perf-card ${i===0?'good':''}">
+      <div class="perf-t">${['🥇','🥈','🥉'][i]} ${r.name}</div>
+      <div class="perf-v ${i===0?'g':''}">${r.score}</div>
+    </div>`).join('');
+  document.getElementById('finalLbLabel').textContent='Final leaderboard';
+  document.getElementById('finalLbHead').innerHTML='<th>Rank</th><th>Team</th><th>Score</th><th>Correct</th>';
+  document.getElementById('finalLbBody').innerHTML=ranked.map((r,i)=>
+    `<tr><td class="${i===0?'rank1':i===1?'rank2':''}">${['1st','2nd','3rd','4th','5th','6th'][i]}</td><td>${r.name}</td><td style="font-weight:${i===0?700:500}">${r.score}</td><td>${r.correct}/${TEAM_QS.length}</td></tr>`
+  ).join('');
+}
+
+/* ──────────────── UTILS ──────────────── */
+function show(id){document.querySelectorAll('.sc').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
+function resetGame(){if(G.soloTimer)clearInterval(G.soloTimer);if(G.teamTimer)clearInterval(G.teamTimer);show('scSetup');renderNameGrid();}
+</script>
+</body>
+</html>
